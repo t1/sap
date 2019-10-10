@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import javax.annotation.processing.Processor;
 
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
 
 public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest {
     @Override Iterable<? extends Processor> getProcessors() { return singletonList(new SapAnnotationProcessor()); }
