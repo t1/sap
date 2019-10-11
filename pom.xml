@@ -6,15 +6,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.t1</groupId>
-    <artifactId>sap</artifactId>
+    <artifactId>sap-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
     <name>Stereotype Annotation Processor</name>
     <description>Scan all annotations for `@Stereotype` annotations and smartly resolve them during the compile</description>
 
     <properties>
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <build>
@@ -24,34 +24,13 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
             </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <!--
-                             If we'd put javax.annotation.processing.Processor into the normal `resources`,
-                             or javac would try to invoke our annotation processor to build itself.
-                             Instead, we manually copy it after the compile is over.
-                            -->
-                            <outputDirectory>${basedir}/target/classes/META-INF</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/META-INF-resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <modules>
+        <module>test</module>
+        <module>sap</module>
+    </modules>
 
     <dependencies>
         <dependency>

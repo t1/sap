@@ -8,12 +8,16 @@ import java.util.Set;
 
 @SupportedAnnotationTypes("*")
 public class SapAnnotationProcessor extends AbstractAnnotationProcessor {
+    public static final String DEBUG_PROPERTY = SapAnnotationProcessor.class.getCanonicalName() + "#DEBUG";
+
     @Override public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver())
             return false;
-        note("process " + annotations + ": " + roundEnv.getRootElements());
-        for (Element element : roundEnv.getRootElements()) {
-            note(" - " + element);
+        for (TypeElement annotation : annotations) {
+            debug(() -> "process " + annotation);
+            for (Element element : roundEnv.getRootElements()) {
+                debug(() -> " - " + element);
+            }
         }
         return true;
     }

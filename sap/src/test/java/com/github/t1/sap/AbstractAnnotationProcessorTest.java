@@ -208,6 +208,9 @@ abstract class AbstractAnnotationProcessorTest {
         return new DiagnosticMatch(Kind.NOTE, null, -1, -1, -1, -1, -1,
             "compiler.note.proc.messager", message);
     }
+
+
+    DiagnosticMatch debug(String message) { return note("[DEBUG] " + message); }
 }
 
 class NoOutputFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
