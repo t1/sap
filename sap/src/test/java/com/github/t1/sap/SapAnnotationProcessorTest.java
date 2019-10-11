@@ -1,5 +1,6 @@
 package com.github.t1.sap;
 
+import com.github.t1.apctt.AbstractAnnotationProcessorTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -12,7 +13,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest {
 
-    @Override Iterable<? extends Processor> getProcessors() { return singletonList(new SapAnnotationProcessor()); }
+    @Override protected Iterable<? extends Processor> getProcessors() { return singletonList(new SapAnnotationProcessor()); }
 
     @BeforeAll static void enableDebugLog() { System.setProperty(SapAnnotationProcessor.DEBUG_PROPERTY, "true"); }
 
@@ -72,14 +73,10 @@ public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest 
         ClassNode classNode = classNode("mypackage/MyBoundary.class");
         then(classNode.name).isEqualTo("mypackage/MyBoundary");
 
-        then(classNode.visibleAnnotations).hasSize(2);
+        then(classNode.visibleAnnotations).hasSize(1);
 
-        AnnotationNode annotation0 = classNode.visibleAnnotations.get(0);
-        then(annotation0.desc).isEqualTo("Lmypackage/Boundary;");
-        then(annotation0.values).isNull();
-
-        AnnotationNode annotation1 = classNode.visibleAnnotations.get(1);
-        then(annotation1.desc).isEqualTo("Ljava/lang/Deprecated;");
-        then(annotation1.values).isNull();
+        AnnotationNode annotation = classNode.visibleAnnotations.get(0);
+        then(annotation.desc).isEqualTo("Ljava/lang/Deprecated;");
+        then(annotation.values).isNull();
     }
 }

@@ -19,14 +19,14 @@ public class SapAnnotationProcessor extends AbstractAnnotationProcessor {
     public static final String DEBUG_PROPERTY = SapAnnotationProcessor.class.getCanonicalName() + "#DEBUG";
 
     private final Set<Element> stereotypes = new HashSet<>();
-    private final List<StereotypeTarget> targets = new ArrayList<>();
+    private final List<StereotypeResolver> targets = new ArrayList<>();
 
     @Override public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver())
             return false;
         findStereotypes(roundEnv);
         findTargets(roundEnv);
-        targets.forEach(StereotypeTarget::resolve);
+        targets.forEach(StereotypeResolver::resolve);
         return true;
     }
 
@@ -47,7 +47,7 @@ public class SapAnnotationProcessor extends AbstractAnnotationProcessor {
         rootElements(roundEnv).flatMap(this::createTargets).filter(Objects::nonNull).forEach(targets::add);
     }
 
-    private Stream<StereotypeTarget> createTargets(Element element) {
+    private Stream<StereotypeResolver> createTargets(Element element) {
         if (!(element instanceof TypeElement))
             return null;
         TypeElement type = (TypeElement) element;
@@ -55,6 +55,6 @@ public class SapAnnotationProcessor extends AbstractAnnotationProcessor {
             .map(mirror -> mirror.getAnnotationType().asElement())
             .flatMap(annotation -> (annotation instanceof TypeElement) ? Stream.of((TypeElement) annotation) : Stream.of())
             .filter(stereotypes::contains)
-            .map(stereotype -> new StereotypeTarget(processingEnv.getMessager(), type, stereotype));
+            .map(stereotype -> new StereotypeResolver(processingEnv.getMessager(), processingEnv.getElementUtils(), type, stereotype));
     }
 }

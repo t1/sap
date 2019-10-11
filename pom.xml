@@ -14,6 +14,9 @@
     <description>Scan all annotations for `@Stereotype` annotations and smartly resolve them during the compile</description>
 
     <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
     </properties>
 
@@ -28,18 +31,12 @@
     </build>
 
     <modules>
-        <module>test</module>
+        <module>annotation-processor-compiler-test-tools</module>
         <module>sap</module>
+        <module>test</module>
     </modules>
 
     <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.10</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

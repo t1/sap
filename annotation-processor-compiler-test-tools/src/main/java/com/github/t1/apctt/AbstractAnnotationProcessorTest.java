@@ -1,4 +1,4 @@
-package com.github.t1.sap;
+package com.github.t1.apctt;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
@@ -37,8 +37,8 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
-abstract class AbstractAnnotationProcessorTest {
-    static class DiagnosticMatch {
+public abstract class AbstractAnnotationProcessorTest {
+    protected static class DiagnosticMatch {
         private Kind kind;
         private String source;
         private long position;
@@ -140,11 +140,11 @@ abstract class AbstractAnnotationProcessorTest {
     }
 
     private final List<DiagnosticMatch> diagnostics = new ArrayList<>();
-    final Map<URI, byte[]> output = new LinkedHashMap<>();
+    protected final Map<URI, byte[]> output = new LinkedHashMap<>();
 
-    StringJavaFileObject file(String file, String source) { return new StringJavaFileObject(Paths.get(file), source); }
+    protected StringJavaFileObject file(String file, String source) { return new StringJavaFileObject(Paths.get(file), source); }
 
-    void compile(JavaFileObject... compilationUnits) {
+    protected void compile(JavaFileObject... compilationUnits) {
         DiagnosticListener<JavaFileObject> diagnosticListener = diagnostic -> {
             System.out.println(diagnostic.getKind() + " [" + diagnostic.getCode() + "] " + diagnostic.getMessage(null)
                 + ((diagnostic.getSource() == null) ? ""
@@ -160,13 +160,13 @@ abstract class AbstractAnnotationProcessorTest {
         task.call();
     }
 
-    abstract Iterable<? extends Processor> getProcessors();
+    protected abstract Iterable<? extends Processor> getProcessors();
 
     /**
      * Check that all these diagnostics have been reported, and no other errors or warning.
      * Note that JavacMessager.printMessage maps OTHER to NOTE, so we can't check for all notes but not others :-(
      */
-    void expect(DiagnosticMatch... expectedDiagnostics) {
+    protected void expect(DiagnosticMatch... expectedDiagnostics) {
         List<DiagnosticMatch> expectedList = new ArrayList<>(asList(expectedDiagnostics));
         then(errors(diagnostics)).describedAs("errors").containsOnlyElementsOf(errors(expectedList));
         then(warnings(diagnostics)).describedAs("warnings").containsOnlyElementsOf(warnings(expectedList));
@@ -196,47 +196,47 @@ abstract class AbstractAnnotationProcessorTest {
     private boolean is(DiagnosticMatch diagnostic, Kind... kind) { return asList(kind).contains(diagnostic.kind); }
 
 
-    DiagnosticMatch error(String message) {
+    protected DiagnosticMatch error(String message) {
         return error(null, -1, -1, -1, -1, -1, "compiler.err.proc.messager", message);
     }
 
-    DiagnosticMatch error(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
+    protected DiagnosticMatch error(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
         return new DiagnosticMatch(ERROR, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
     }
 
 
-    DiagnosticMatch warning(String message) { return warning("compiler.warn.proc.messager", message); }
+    protected DiagnosticMatch warning(String message) { return warning("compiler.warn.proc.messager", message); }
 
-    DiagnosticMatch warning(String code, String message) {
+    protected DiagnosticMatch warning(String code, String message) {
         return warning(null, -1, -1, -1, -1, -1, code, message);
     }
 
-    DiagnosticMatch warning(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
+    protected DiagnosticMatch warning(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
         return new DiagnosticMatch(WARNING, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
     }
 
 
-    DiagnosticMatch note(String message) {
+    protected DiagnosticMatch note(String message) {
         return new DiagnosticMatch(NOTE, null, -1, -1, -1, -1, -1,
             "compiler.note.proc.messager", message);
     }
 
-    DiagnosticMatch note(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
+    protected DiagnosticMatch note(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
         return new DiagnosticMatch(NOTE, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
     }
 
 
-    DiagnosticMatch debug(String message) { return note("[DEBUG] " + message); }
+    protected DiagnosticMatch debug(String message) { return note("[DEBUG] " + message); }
 
 
-    ClassNode classNode(String path) {
+    protected ClassNode classNode(String path) {
         ClassReader classReader = new ClassReader(output(path));
         ClassNode classNode = new ClassNode();
         classReader.accept(classNode, 0);
         return classNode;
     }
 
-    byte[] output(String uri) { return this.output.get(URI.create("string:///" + uri)); }
+    protected byte[] output(String uri) { return this.output.get(URI.create("string:///" + uri)); }
 
 
     class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
