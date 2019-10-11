@@ -2,10 +2,13 @@ package com.github.t1.sap;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.processing.Processor;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.BDDAssertions.then;
 
 public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest {
 
@@ -20,9 +23,14 @@ public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest 
             "}"));
 
         expect(
-            debug("process java.lang.Deprecated"),
-            debug(" - Simple")
+            debug("Stereotypes: []")
         );
+        ClassNode classNode = classNode("Simple.class");
+        then(classNode.name).isEqualTo("Simple");
+        then(classNode.visibleAnnotations).hasSize(1);
+        AnnotationNode annotation = classNode.visibleAnnotations.get(0);
+        then(annotation.desc).isEqualTo("Ljava/lang/Deprecated;");
+        then(annotation.values).isNull();
     }
 
     @Test void shouldCompileClassWithOneStereotype() {
@@ -47,11 +55,31 @@ public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest 
                 "@Boundary\n" +
                 "@Deprecated\n" +
                 "public class MyBoundary {\n" +
+                "}\n"),
+            file("mypackage/OtherClass.java", "" +
+                "package mypackage;\n" +
+                "\n" +
+                "@Deprecated\n" +
+                "public class OtherClass {\n" +
+                "    @Deprecated public void foo() {}\n" +
                 "}\n"));
 
         expect(
-            //     debug("process [java.lang.Deprecated]: [Simple]"),
-            //     debug(" - Simple")
+            debug("Stereotypes: [mypackage.Boundary]"),
+            note("/mypackage/MyBoundary.java", 49, 20, 69, 5, 8, "compiler.note.proc.messager",
+                "resolve stereotype: mypackage.Boundary")
         );
+        ClassNode classNode = classNode("mypackage/MyBoundary.class");
+        then(classNode.name).isEqualTo("mypackage/MyBoundary");
+
+        then(classNode.visibleAnnotations).hasSize(2);
+
+        AnnotationNode annotation0 = classNode.visibleAnnotations.get(0);
+        then(annotation0.desc).isEqualTo("Lmypackage/Boundary;");
+        then(annotation0.values).isNull();
+
+        AnnotationNode annotation1 = classNode.visibleAnnotations.get(1);
+        then(annotation1.desc).isEqualTo("Ljava/lang/Deprecated;");
+        then(annotation1.values).isNull();
     }
 }

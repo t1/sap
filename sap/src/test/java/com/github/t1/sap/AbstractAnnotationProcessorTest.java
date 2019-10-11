@@ -1,5 +1,8 @@
 package com.github.t1.sap;
 
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
+
 import javax.annotation.processing.Processor;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
@@ -12,17 +15,25 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
+import static javax.tools.Diagnostic.Kind.NOTE;
+import static javax.tools.Diagnostic.Kind.OTHER;
+import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
@@ -129,6 +140,7 @@ abstract class AbstractAnnotationProcessorTest {
     }
 
     private final List<DiagnosticMatch> diagnostics = new ArrayList<>();
+    final Map<URI, byte[]> output = new LinkedHashMap<>();
 
     StringJavaFileObject file(String file, String source) { return new StringJavaFileObject(Paths.get(file), source); }
 
@@ -140,7 +152,7 @@ abstract class AbstractAnnotationProcessorTest {
             diagnostics.add(new DiagnosticMatch(diagnostic));
         };
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        NoOutputFileManager fileManager = new NoOutputFileManager(compiler.getStandardFileManager(diagnosticListener, null, null));
+        InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(diagnosticListener, null, null));
 
         CompilationTask task = compiler.getTask(null, fileManager, diagnosticListener, asList("-Xlint:all", "-source", "8", "-target", "8"),
             null, asList(compilationUnits));
@@ -163,11 +175,11 @@ abstract class AbstractAnnotationProcessorTest {
         then(expectedList).isEmpty();
     }
 
-    private boolean isError(DiagnosticMatch diagnostic) { return is(diagnostic, Kind.ERROR); }
+    private boolean isError(DiagnosticMatch diagnostic) { return is(diagnostic, ERROR); }
 
-    private boolean isWarning(DiagnosticMatch diagnostic) { return is(diagnostic, Kind.WARNING, Kind.MANDATORY_WARNING); }
+    private boolean isWarning(DiagnosticMatch diagnostic) { return is(diagnostic, WARNING, MANDATORY_WARNING); }
 
-    private boolean isNoteOrOther(DiagnosticMatch diagnostic) { return is(diagnostic, Kind.NOTE, Kind.OTHER); }
+    private boolean isNoteOrOther(DiagnosticMatch diagnostic) { return is(diagnostic, NOTE, OTHER); }
 
     private List<DiagnosticMatch> errors(List<DiagnosticMatch> diagnostics) { return split(diagnostics, this::isError); }
 
@@ -189,7 +201,7 @@ abstract class AbstractAnnotationProcessorTest {
     }
 
     DiagnosticMatch error(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
-        return new DiagnosticMatch(Kind.ERROR, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
+        return new DiagnosticMatch(ERROR, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
     }
 
 
@@ -200,52 +212,69 @@ abstract class AbstractAnnotationProcessorTest {
     }
 
     DiagnosticMatch warning(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
-        return new DiagnosticMatch(Kind.WARNING, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
+        return new DiagnosticMatch(WARNING, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
     }
 
 
     DiagnosticMatch note(String message) {
-        return new DiagnosticMatch(Kind.NOTE, null, -1, -1, -1, -1, -1,
+        return new DiagnosticMatch(NOTE, null, -1, -1, -1, -1, -1,
             "compiler.note.proc.messager", message);
+    }
+
+    DiagnosticMatch note(String source, long position, long startPosition, long endPosition, long lineNumber, long columnNumber, String code, String message) {
+        return new DiagnosticMatch(NOTE, source, position, startPosition, endPosition, lineNumber, columnNumber, code, message);
     }
 
 
     DiagnosticMatch debug(String message) { return note("[DEBUG] " + message); }
-}
 
-class NoOutputFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
-    NoOutputFileManager(StandardJavaFileManager fileManager) { super(fileManager); }
 
-    @Override public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) {
-        return new NoOutputJavaFileObject(URI.create("string:///" + className.replace('.', '/') + kind.extension), kind);
+    ClassNode classNode(String path) {
+        ClassReader classReader = new ClassReader(output(path));
+        ClassNode classNode = new ClassNode();
+        classReader.accept(classNode, 0);
+        return classNode;
     }
 
-    @Override public boolean isSameFile(FileObject a, FileObject b) {
-        return a.toUri().equals(b.toUri());
-    }
+    byte[] output(String uri) { return this.output.get(URI.create("string:///" + uri)); }
 
-    private static final class NoOutputJavaFileObject extends SimpleJavaFileObject {
-        NoOutputJavaFileObject(URI uri, Kind kind) { super(uri, kind); }
 
-        @Override
-        public OutputStream openOutputStream() {
-            return new OutputStream() {
-                @Override public void write(int b) {}
-            };
+    class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
+        InMemoryFileManager(StandardJavaFileManager fileManager) { super(fileManager); }
+
+        @Override public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) {
+            return new InMemoryJavaFileObject(URI.create("string:///" + className.replace('.', '/') + kind.extension), kind);
+        }
+
+        @Override public boolean isSameFile(FileObject a, FileObject b) {
+            return a.toUri().equals(b.toUri());
+        }
+
+        private final class InMemoryJavaFileObject extends SimpleJavaFileObject {
+            InMemoryJavaFileObject(URI uri, Kind kind) { super(uri, kind); }
+
+            @Override
+            public OutputStream openOutputStream() {
+                return new ByteArrayOutputStream() {
+                    @Override public void close() {
+                        output.put(uri, this.toByteArray());
+                    }
+                };
+            }
         }
     }
-}
 
-class StringJavaFileObject extends SimpleJavaFileObject {
-    private final String content;
+    static class StringJavaFileObject extends SimpleJavaFileObject {
+        private final String content;
 
-    StringJavaFileObject(Path path, String content) {
-        super(URI.create("string:///" + path), Kind.SOURCE);
-        this.content = content;
-    }
+        StringJavaFileObject(Path path, String content) {
+            super(URI.create("string:///" + path), Kind.SOURCE);
+            this.content = content;
+        }
 
-    @Override
-    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-        return content;
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+            return content;
+        }
     }
 }
