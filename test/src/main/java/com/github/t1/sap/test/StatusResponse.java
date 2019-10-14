@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 
 import static lombok.AccessLevel.PRIVATE;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor(access = PRIVATE)
-public @Data class StatusResponse {
+@Data @Builder
+@NoArgsConstructor @AllArgsConstructor(access = PRIVATE)
+public class StatusResponse {
     TransactionStatus transactionStatus;
 }
