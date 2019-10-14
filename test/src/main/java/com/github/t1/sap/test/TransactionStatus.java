@@ -1,11 +1,7 @@
 package com.github.t1.sap.test;
 
-import lombok.SneakyThrows;
-
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
-import java.util.stream.Stream;
 
 public enum TransactionStatus {
     /**
@@ -86,16 +82,11 @@ public enum TransactionStatus {
      */
     ROLLING_BACK;
 
-    @SneakyThrows(SystemException.class)
-    public static TransactionStatus of(TransactionManager manager) { return toEnum(manager.getStatus()); }
-
-    @SneakyThrows(SystemException.class)
-    public static TransactionStatus of(UserTransaction transaction) { return toEnum(transaction.getStatus()); }
-
-    private static TransactionStatus toEnum(int status) {
-        return Stream.of(values())
-            .filter(it -> it.ordinal() == status)
-            .findAny()
-            .orElseThrow(() -> new IllegalStateException("unknown transaction manager status " + status));
+    public static TransactionStatus of(TransactionManager manager) {
+        try {
+            return values()[manager.getStatus()];
+        } catch (SystemException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
