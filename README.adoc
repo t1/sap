@@ -1,14 +1,12 @@
 = S@P - Stereotype Annotation Processor
 
-http://cdi-spec.org[CDI] has a very nice feature that is not used as often as it should: Stereotypes. They allow you to group a set of annotations into one, more abstract and hopefully more descriptive, annotation; e.g. the build-in `@Model` stereotype defines the annotated class defines a model in an MVC architecture.
+http://cdi-spec.org[CDI] has a very nice feature that is not used as often as it should be: Stereotypes. They allow you to group a set of annotations into a single, more abstract, and hopefully more descriptive annotation; e.g. the built-in `@Model` stereotype defines the annotated class defines a model in an MVC architecture.
 
 For more details and examples, see https://jakarta.ee/specifications/cdi/2.0/apidocs/javax/enterprise/inject/Stereotype.html[the javadoc].
 
 == Why are Stereotypes underused?
 
-Stereotypes only work within CDI. Annotations from other standards, can't be stereotyped; so you always have to carefully make sure that only CDI annotations are involved.
-
-I.e. you can't define a `@Boundary` annotation for your JAX-RS service interface classes that provides a `@Stateless` annotation:
+Stereotypes only work within CDI — annotations from other standards, can't be stereotyped; so you always have to carefully make sure that you use only CDI annotations. E.g., you can't define a `@Boundary` annotation for your JAX-RS service interface classes that provides a `@Stateless` annotation:
 
 [source,java]
 ---------------------------------------------------------------
@@ -26,15 +24,13 @@ This reduced applicability makes it hard to keep it as a valid option in mind.
 
 == What does s@p provide?
 
-`s@p` is an annotation processor that does the resolution of annotations at compile time. In this way, the resolution also works for libraries that don't support stereotypes by themselves. I.e. the example from above would just work after putting `s@p` on the classpath while compiling!
-
-A demo war doing exactly this can be found in the `test` module.
+`s@p` is an annotation processor that does the resolution of annotations at compile time. In this way, the resolution also works for libraries that don't support stereotypes out-of-the-box. I.e. the example from above would just work after putting `s@p` on the classpath while compiling! A demo `test.war` doing exactly this can be found in the `test` module.
 
 The implementation works by manipulating the `javac` AST; similar to how https://projectlombok.org[Lombok] works.
 
 == Status
 
-It's currently just a proof-of-concept and we are kindly asking for your feedback on how it may be improved. How big is the potential? What is missing/not working most importantly?
+This is currently just a proof-of-concept ready for your feedback on how it may be improved. What features are missing or not working? Spring has some good ones to learn from! Should we use our own Stereotype annotation, maybe `@Metatype`? What priorities do these things have? How big is the overall demand and potential? Would it make sense to get this into a standard like https://microprofile.io[Microprofile]?
 
 == References
 
