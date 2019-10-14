@@ -8,18 +8,18 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
 
 import javax.json.bind.JsonbBuilder;
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.concurrent.Semaphore;
 
 import static com.github.t1.sap.test.TransactionStatus.ACTIVE;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @Testcontainers
-public class WildflyIT {
+class WildflyIT {
 
     @Container
     private static FixedHostPortGenericContainer<?> WILDFLY =
@@ -28,11 +28,16 @@ public class WildflyIT {
             .withFixedExposedPort(8080, 8080);
 
     @Test
-    void test() throws IOException, InterruptedException {
+    void test() throws Exception {
         then(WILDFLY.isRunning()).isTrue();
-        System.out.println("wait for Wildfly and app to start");
-        Thread.sleep(15_000); // TODO smarter way
-        System.out.println("done waiting for Wildfly and app to start");
+        Semaphore started = new Semaphore(0);
+        WILDFLY.followOutput(outputFrame -> {
+            String message = outputFrame.getUtf8String();
+            System.out.print(message);
+            if (message.contains("WildFly Core") && message.contains(" started "))
+                started.release();
+        });
+        started.acquire();
 
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:8080/test"))
