@@ -1,7 +1,8 @@
 package com.github.t1.sap.test;
 
+import com.github.t1.sap.test.annotations.Boundary;
+
 import javax.annotation.Resource;
-import javax.naming.NamingException;
 import javax.transaction.TransactionManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

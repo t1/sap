@@ -1,4 +1,4 @@
-package com.github.t1.sap.test;
+package com.github.t1.sap.test.annotations;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Stereotype;

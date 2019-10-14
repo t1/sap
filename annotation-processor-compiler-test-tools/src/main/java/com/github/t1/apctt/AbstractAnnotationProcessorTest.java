@@ -1,5 +1,6 @@
 package com.github.t1.apctt;
 
+import org.assertj.core.api.ListAssert;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -25,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Arrays.asList;
@@ -34,9 +36,10 @@ import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static javax.tools.Diagnostic.Kind.OTHER;
 import static javax.tools.Diagnostic.Kind.WARNING;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SuppressWarnings({"SameParameterValue", "unused"})
+@SuppressWarnings({"SameParameterValue", "unused", "WeakerAccess"})
 public abstract class AbstractAnnotationProcessorTest {
     protected static class DiagnosticMatch {
         private Kind kind;
@@ -168,11 +171,23 @@ public abstract class AbstractAnnotationProcessorTest {
      */
     protected void expect(DiagnosticMatch... expectedDiagnostics) {
         List<DiagnosticMatch> expectedList = new ArrayList<>(asList(expectedDiagnostics));
-        then(errors(diagnostics)).describedAs("errors").containsOnlyElementsOf(errors(expectedList));
-        then(warnings(diagnostics)).describedAs("warnings").containsOnlyElementsOf(warnings(expectedList));
-        then(notes(diagnostics)).describedAs("notes").containsAll(notes(expectedList));
+        thenExtract(this::errors, "errors", true, errors(expectedList));
+        thenExtract(this::warnings, "warnings", true, warnings(expectedList));
+        thenExtract(this::notes, "notes", false, notes(expectedList));
         then(diagnostics).allMatch(this::isNoteOrOther);
         then(expectedList).isEmpty();
+    }
+
+    private void thenExtract(Function<List<DiagnosticMatch>, List<DiagnosticMatch>> extractor, String label, boolean exhaustive, List<DiagnosticMatch> expected) {
+        List<DiagnosticMatch> extracted = extractor.apply(diagnostics);
+        if (expected.isEmpty() && !extracted.isEmpty())
+            //noinspection ResultOfMethodCallIgnored
+            fail("expected no " + label + " but got " + extracted);
+        ListAssert<DiagnosticMatch> diagnosticAssert = then(extracted).describedAs(label);
+        if (exhaustive)
+            diagnosticAssert.containsOnlyElementsOf(expected);
+        else
+            diagnosticAssert.containsAll(expected);
     }
 
     private boolean isError(DiagnosticMatch diagnostic) { return is(diagnostic, ERROR); }
@@ -236,7 +251,11 @@ public abstract class AbstractAnnotationProcessorTest {
         return classNode;
     }
 
-    protected byte[] output(String uri) { return this.output.get(URI.create("string:///" + uri)); }
+    protected byte[] output(String uri) {
+        return this.output.computeIfAbsent(URI.create("string:///" + uri), x -> {
+            throw new IllegalArgumentException("no output found for " + uri);
+        });
+    }
 
 
     class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {

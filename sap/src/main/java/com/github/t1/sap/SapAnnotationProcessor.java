@@ -5,33 +5,40 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.enterprise.inject.Stereotype;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 @SupportedAnnotationTypes("*")
 public class SapAnnotationProcessor extends AbstractAnnotationProcessor {
-    public static final String DEBUG_PROPERTY = SapAnnotationProcessor.class.getCanonicalName() + "#DEBUG";
+    static final String DEBUG_PROPERTY = SapAnnotationProcessor.class.getCanonicalName() + "#DEBUG";
 
-    private final Set<Element> stereotypes = new HashSet<>();
-    private final List<StereotypeResolver> targets = new ArrayList<>();
+    private final Map<Element, String> stereotypesMap = new IdentityHashMap<>();
+    private final Set<Element> stereotypes = stereotypesMap.keySet();
+    private int round = 0;
 
     @Override public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        debug(() -> "round " + round++ + "; over=" + roundEnv.processingOver());
         if (roundEnv.processingOver())
             return false;
+
         findStereotypes(roundEnv);
-        findTargets(roundEnv);
-        targets.forEach(StereotypeResolver::resolve);
+
+        List<StereotypeResolver> targets = findTargets(roundEnv);
+        debug(() -> "found " + stereotypes.size() + " stereotypes for " + targets.size() + " targets");
+        for (StereotypeResolver target : targets)
+            target.resolve();
+
         return true;
     }
 
     private void findStereotypes(RoundEnvironment roundEnv) {
-        rootElements(roundEnv).filter(this::isStereotype).forEach(stereotypes::add);
+        rootElements(roundEnv).filter(this::isStereotype).forEach(element -> stereotypesMap.put(element, ""));
         debug(() -> "Stereotypes: " + stereotypes);
     }
 
@@ -43,8 +50,8 @@ public class SapAnnotationProcessor extends AbstractAnnotationProcessor {
         return element.getAnnotation(Stereotype.class) != null;
     }
 
-    private void findTargets(RoundEnvironment roundEnv) {
-        rootElements(roundEnv).flatMap(this::createTargets).filter(Objects::nonNull).forEach(targets::add);
+    private List<StereotypeResolver> findTargets(RoundEnvironment roundEnv) {
+        return rootElements(roundEnv).flatMap(this::createTargets).filter(Objects::nonNull).collect(toList());
     }
 
     private Stream<StereotypeResolver> createTargets(Element element) {

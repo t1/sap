@@ -3,7 +3,6 @@ package com.github.t1.sap;
 import com.github.t1.apctt.AbstractAnnotationProcessorTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.processing.Processor;
@@ -28,14 +27,19 @@ public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest 
         );
         ClassNode classNode = classNode("Simple.class");
         then(classNode.name).isEqualTo("Simple");
-        then(classNode.visibleAnnotations).hasSize(1);
-        AnnotationNode annotation = classNode.visibleAnnotations.get(0);
-        then(annotation.desc).isEqualTo("Ljava/lang/Deprecated;");
-        then(annotation.values).isNull();
+        then(classNode.visibleAnnotations).extracting("desc").containsOnly(
+            "Ljava/lang/Deprecated;");
     }
 
     @Test void shouldCompileClassWithOneStereotype() {
         compile(
+            file("mypackage/OtherClass.java", "" +
+                "package mypackage;\n" +
+                "\n" +
+                "@Deprecated\n" +
+                "public class OtherClass {\n" +
+                "    @Deprecated public void foo() {}\n" +
+                "}\n"),
             file("mypackage/Boundary.java", "" +
                 "package mypackage;\n" +
                 "\n" +
@@ -53,30 +57,40 @@ public class SapAnnotationProcessorTest extends AbstractAnnotationProcessorTest 
             file("mypackage/MyBoundary.java", "" +
                 "package mypackage;\n" +
                 "\n" +
+                "import javax.ws.rs.Path;\n" +
+                "\n" +
+                "@Path(\"/\")\n" +
                 "@Boundary\n" +
                 "@Deprecated\n" +
                 "public class MyBoundary {\n" +
-                "}\n"),
-            file("mypackage/OtherClass.java", "" +
-                "package mypackage;\n" +
-                "\n" +
-                "@Deprecated\n" +
-                "public class OtherClass {\n" +
-                "    @Deprecated public void foo() {}\n" +
                 "}\n"));
 
         expect(
             debug("Stereotypes: [mypackage.Boundary]"),
-            note("/mypackage/MyBoundary.java", 49, 20, 69, 5, 8, "compiler.note.proc.messager",
-                "resolve stereotype: mypackage.Boundary")
+            note("/mypackage/MyBoundary.java", 86, 46, 106, 8, 8, "compiler.note.proc.messager",
+                "resolve stereotype: mypackage.Boundary"),
+            debug("out:\n" +
+                "  package mypackage;\n" +
+                "  \n" +
+                "  import javax.ejb.Stateless;\n" +
+                "  import javax.ws.rs.Path;\n" +
+                "  \n" +
+                "  @Path(value = \"/\")\n" +
+                "  @Deprecated()\n" +
+                "  @Stateless()\n" +
+                "  public class MyBoundary {\n" +
+                "      \n" +
+                "      public MyBoundary() {\n" +
+                "          super();\n" +
+                "      }\n" +
+                "  }")
         );
         ClassNode classNode = classNode("mypackage/MyBoundary.class");
+        then(classNode).isNotNull();
         then(classNode.name).isEqualTo("mypackage/MyBoundary");
-
-        then(classNode.visibleAnnotations).hasSize(1);
-
-        AnnotationNode annotation = classNode.visibleAnnotations.get(0);
-        then(annotation.desc).isEqualTo("Ljava/lang/Deprecated;");
-        then(annotation.values).isNull();
+        then(classNode.visibleAnnotations).extracting("desc").containsOnly(
+            "Ljavax/ws/rs/Path;",
+            "Ljava/lang/Deprecated;",
+            "Ljavax/ejb/Stateless;");
     }
 }

@@ -1,32 +1,42 @@
 package com.github.t1.sap.javac;
 
 import com.sun.tools.javac.tree.JCTree.JCClassDecl;
+import com.sun.tools.javac.tree.JCTree.JCModifiers;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
-@RequiredArgsConstructor
+import static lombok.AccessLevel.PACKAGE;
+
+@RequiredArgsConstructor(access = PACKAGE)
 public class ClassDeclaration {
     private final @NonNull TypeResolver resolver;
+    /** The classDecl is null, if the class is, e.g., from a library */
+    @Getter private final CompilationUnit compilationUnit;
     private final @NonNull TypeElement typeElement;
-    private final @NonNull JCClassDecl classDecl;
-    private Modifiers modifiers;
+    private final JCClassDecl classDecl;
+    private List<Annotation> annotations;
 
     public String getQualifiedName() { return classDecl.sym.toString(); }
 
     public TypeElement getElement() { return typeElement; }
 
-    public String toSource() { return classDecl.toString(); }
-
-    public List<AnnotationUsage> getAnnotations() { return getModifiers().getAnnotations(); }
-
-    public Modifiers getModifiers() {
-        if (modifiers == null)
-            modifiers = new Modifiers(resolver, classDecl.mods);
-        return modifiers;
+    public List<Annotation> getAnnotations() {
+        if (annotations == null) {
+            JCModifiers mods = classDecl.mods;
+            annotations = new JavacList<>(
+                mods.annotations,
+                jcAnnotation -> new Annotation(resolver, compilationUnit, jcAnnotation),
+                annotation -> annotation.jcAnnotation,
+                l -> mods.annotations = l
+            );
+        }
+        return annotations;
     }
 
     @Override public String toString() {
@@ -43,4 +53,12 @@ public class ClassDeclaration {
     }
 
     @Override public int hashCode() { return Objects.hash(classDecl); }
+
+    public Stream<Import> getImports() {
+        return getCompilationUnit().getImports();
+    }
+
+    public void addImports(Stream<Import> imports) {
+        getCompilationUnit().addImports(imports);
+    }
 }
