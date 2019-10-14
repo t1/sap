@@ -48,7 +48,7 @@ class WildflyIT {
 
         then(response.statusCode()).isEqualTo(200);
         StatusResponse statusResponse = JsonbBuilder.create().fromJson(response.body(), StatusResponse.class);
-        then(statusResponse.getTransactionStatus()).isEqualTo(ACTIVE);
+        then(statusResponse.transactionStatus).isEqualTo(ACTIVE);
     }
 
     private static final HttpClient CLIENT = HttpClient.newBuilder().build();

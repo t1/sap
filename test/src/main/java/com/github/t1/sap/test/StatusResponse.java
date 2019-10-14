@@ -10,5 +10,5 @@ import static lombok.AccessLevel.PRIVATE;
 @Data @Builder
 @NoArgsConstructor @AllArgsConstructor(access = PRIVATE)
 public class StatusResponse {
-    TransactionStatus transactionStatus;
+    public TransactionStatus transactionStatus;
 }
