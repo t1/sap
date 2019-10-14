@@ -1,4 +1,4 @@
-package com.github.t1.sap;
+package com.github.t1.sap.tools;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.SupportedSourceVersion;

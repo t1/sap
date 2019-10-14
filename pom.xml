@@ -10,8 +10,9 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Stereotype Annotation Processor</name>
+    <name>Stereotype Annotation Processor (Parent Project)</name>
     <description>Scan all annotations for `@Stereotype` annotations and smartly resolve them during the compile</description>
+    <url>https://github.com/t1/sap</url>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

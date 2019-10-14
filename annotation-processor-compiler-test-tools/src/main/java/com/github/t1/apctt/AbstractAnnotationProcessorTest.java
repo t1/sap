@@ -157,13 +157,26 @@ public abstract class AbstractAnnotationProcessorTest {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(diagnosticListener, null, null));
 
-        CompilationTask task = compiler.getTask(null, fileManager, diagnosticListener, asList("-Xlint:all", "-source", "8", "-target", "8"),
-            null, asList(compilationUnits));
+        CompilationTask task = compiler.getTask(null, fileManager, diagnosticListener, getOptions(), null, asList(compilationUnits));
         task.setProcessors(getProcessors());
         task.call();
     }
 
     protected abstract Iterable<? extends Processor> getProcessors();
+
+    private List<String> getOptions() {
+        return asList(
+            "-Xlint:all",
+            "-source", "8",
+            "-target", "8",
+            /* Prints a textual representation of specified types for debugging purposes.
+             * This doesn’t perform annotation processing or compilation. The format of the output could change. */
+            // "-Xprint",
+            /* Prints information about which annotations a processor is asked to process. */
+            "-XprintProcessorInfo",
+            /* Prints information about initial and subsequent annotation processing rounds. */
+            "-XprintRounds");
+    }
 
     /**
      * Check that all these diagnostics have been reported, and no other errors or warning.

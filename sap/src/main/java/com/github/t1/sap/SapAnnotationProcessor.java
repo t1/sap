@@ -1,5 +1,7 @@
 package com.github.t1.sap;
 
+import com.github.t1.sap.tools.AbstractAnnotationProcessor;
+
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.enterprise.inject.Stereotype;
