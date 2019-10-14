@@ -1,6 +1,6 @@
 = S@P - Stereotype Annotation Processor
 
-http://cdi-spec.org[CDI] has a very nice feature that is not used as often as it should be: Stereotypes. They allow you to group a set of annotations into a single, more abstract, and hopefully more descriptive annotation; e.g. the built-in `@Model` stereotype defines the annotated class defines a model in an MVC architecture.
+http://cdi-spec.org[CDI] has a very nice feature that is not used as often as it should be: Stereotypes. They allow you to group a set of annotations into a single, more abstract, and hopefully more descriptive annotation; e.g. the built-in `@Model` stereotype defines that the annotated class defines a model in an MVC architecture.
 
 For more details and examples, see https://jakarta.ee/specifications/cdi/2.0/apidocs/javax/enterprise/inject/Stereotype.html[the javadoc].
 
@@ -30,7 +30,7 @@ The implementation works by manipulating the `javac` AST; similar to how https:/
 
 == Status
 
-This is currently just a proof-of-concept ready for your feedback on how it may be improved. What features are missing or not working? Spring has some good ones to learn from! Should we use our own Stereotype annotation, maybe `@Metatype`? What priorities do these things have? How big is the overall demand and potential? Would it make sense to get this into a standard like https://microprofile.io[Microprofile]?
+This is currently just a proof-of-concept, ready for your feedback on how it may be improved. What features are missing or not working? Spring has some good ones to learn from! Should we use our own Stereotype annotation, maybe `@Metatype`? What priorities do these things have? How big is the overall demand and potential? Would it make sense to get this into a standard like https://microprofile.io[Microprofile]?
 
 == References
 
