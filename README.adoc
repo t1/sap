@@ -1,8 +1,6 @@
 = S@P - Stereotype Annotation Processor
 
-http://cdi-spec.org[CDI] has a very nice feature that is not used as often as it should be: Stereotypes. They allow you to group a set of annotations into a single, more abstract, and hopefully more descriptive annotation; e.g. the built-in `@Model` stereotype defines that the annotated class defines a model in an MVC architecture.
-
-For more details and examples, see https://jakarta.ee/specifications/cdi/2.0/apidocs/javax/enterprise/inject/Stereotype.html[the javadoc].
+http://cdi-spec.org[CDI] has a very nice feature that is not used as often as it should be: Stereotypes. They allow you to group a set of annotations into a single, more abstract, and hopefully more descriptive annotation; e.g. the built-in `@Model` stereotype defines that the annotated class defines a model in an MVC architecture. For more details and examples, see https://jakarta.ee/specifications/cdi/2.0/apidocs/javax/enterprise/inject/Stereotype.html[the javadoc].
 
 == Why are Stereotypes underused?
 
@@ -30,7 +28,7 @@ The implementation works by manipulating the `javac` AST; similar to how https:/
 
 == Status
 
-This is currently just a proof-of-concept, waiting for your feedback on how it can improve. When doesn't it work correctly? What features are missing? Spring has some good features to learn from! Should we use our own Stereotype annotation, maybe `@Metatype`? Some features may be framework specific; should we bake them in or make it all configurable or allow plugins? What priorities do these things have? How big is the overall demand and potential? Would it make sense to get this into a standard like https://microprofile.io[Microprofile]?
+This is currently just a proof-of-concept, waiting for your feedback on how it can improve. When doesn't it work correctly? What features are missing? Spring has some good features to learn from! Should we use our own Stereotype annotation, maybe `@Metatype`? Some features may be framework specific; should we bake them in? Or make it all configurable? Or allow plugins? What priorities do these things have? How big is the overall demand and potential? Would it make sense to get this into a standard like https://microprofile.io[Microprofile]?
 
 == References
 
