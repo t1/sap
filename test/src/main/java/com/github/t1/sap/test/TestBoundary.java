@@ -15,8 +15,8 @@ public class TestBoundary {
     TransactionManager transactionManager;
 
     @GET public StatusResponse get() {
-        return StatusResponse.builder()
-            .transactionStatus(TransactionStatus.of(transactionManager))
-            .build();
+        StatusResponse statusResponse = new StatusResponse();
+        statusResponse.transactionStatus = TransactionStatus.of(transactionManager);
+        return statusResponse;
     }
 }
