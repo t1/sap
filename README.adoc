@@ -16,7 +16,7 @@ Stereotypes only work within CDI — annotations from other standards, can't be 
 public @interface Boundary {}
 ---------------------------------------------------------------
 
-There won't be any errors, it just won't work. This makes the use of stereotypes error prone and many prefer to never use them at all.
+There won't be any errors, it just won't work. This makes the use of stereotypes error prone; so many prefer to never use them at all.
 
 OTOH library developers that would want to support Stereotypes would have to add an optional dependency and write the code to do the actual resolution.
 
